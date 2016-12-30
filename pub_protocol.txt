@@ -1,0 +1,393 @@
+
+enum EIF_Item_Type : char
+{
+	 0 Static
+	 2 Money
+	 3 Heal
+	 4 Teleport
+	 5 Spell
+	 6 EXPReward
+	 7 StatReward
+	 8 SkillReward
+	 9 Key
+	10 Weapon
+	11 Shield
+	12 Armor
+	13 Hat
+	14 Boots
+	15 Gloves
+	16 Accessory
+	17 Belt
+	18 Necklace
+	19 Ring
+	20 Armlet
+	21 Bracer
+	22 Beer
+	23 EffectPotion
+	24 HairDye
+	25 CureCurse
+}
+
+enum EIF_Item_SubType : char
+{
+	0 None
+	1 Ranged
+	2 Arrows
+	3 Wings
+	4 TwoHanded
+}
+
+enum EIF_Item_Special : char
+{
+	0 Normal
+	1 Rare
+	3 Unique
+	4 Lore
+	5 Cursed
+}
+
+enum EIF_Item_Size : char
+{
+	0 Size1x1
+	1 Size1x2
+	2 Size1x3
+	3 Size1x4
+	4 Size2x1
+	5 Size2x2
+	6 Size2x3
+	7 Size2x4
+}
+
+struct EIF_Item
+{
+	prefix_string name
+	short graphic_id
+	EIF_Item_SubType type
+	EIF_Item_SubType subtype
+	EIF_Item_Special special
+	short hp
+	short tp
+	short min_damage
+	short max_damage
+	short accuracy
+	short evade
+	short armor
+	char = 0
+	char str
+	char intl
+	char wis
+	char agi
+	char con
+	char cha
+	char = 0
+	char = 0
+	char = 0
+	char = 0
+	char = 0
+	char = 0
+	three spec1
+	char spec2
+	char spec3
+	short level_req
+	short class_req
+	short str_req
+	short int_req
+	short wis_req
+	short agi_req
+	short con_req
+	short cha_req
+	char element
+	char element_power
+	char weight
+	char = 0
+	EIF_Item_Size size
+}
+
+struct EIF_File
+{
+	raw_string(3) magic
+	byte hash[4]
+	short num_items
+	char = 0
+	struct EIF_Item items[num_items]
+}
+
+
+// ---
+
+enum ENF_NPC_Type : short
+{
+	 0 NPC
+	 1 Passive
+	 2 Aggressive
+	 6 Shop
+	 7 Inn
+	 9 Bank
+	10 Barber
+	11 Guild
+	12 Priest
+	13 Law
+	14 Skills
+	15 Quest
+}
+
+struct ENF_NPC
+{
+	prefix_string name
+	short graphic_id
+	char = 0
+	short boss
+	short child
+	ENF_NPC_Type type
+	short vendor_id
+	three hp
+	short = 0
+	short min_damage
+	short max_damage
+	short accuracy
+	short evade
+	short armor
+	char = 0
+	short = 0
+	short = 0
+	short element_weak
+	short element_weak_power
+	char = 0
+	three experience
+}
+
+struct ENF_File
+{
+	raw_string(3) magic
+	byte hash[4]
+	short num_npcs
+	char = 0
+	struct ENF_NPC npcs[num_npcs]
+}
+
+
+// ---
+
+enum ECF_Class_Type : char
+{
+	0 Melee
+	1 Rogue
+	2 Magic
+	3 Archer
+	4 Peasant
+}
+
+struct ECF_Class
+{
+	prefix_string name
+	char parent_type
+	ECF_Class_Type type
+	short str
+	short intl
+	short wis
+	short agi
+	short con
+	short cha
+}
+
+struct ECF_File
+{
+	raw_string(3) magic
+	byte hash[4]
+	short num_classes
+	char = 0
+	struct ECF_Class classes[num_classes]
+}
+
+
+// ---
+
+enum ESF_Spell_Type : three
+{
+	0 Heal
+	1 Damage
+	2 Bard
+}
+
+enum ESF_Spell_Target_Restrict : char
+{
+	0 NPC
+	1 Friendly
+	2 Opponent
+}
+
+enum ESF_Spell_Target_Type : char
+{
+	0 Normal
+	1 Self
+	3 Group
+}
+
+struct ESF_Spell
+{
+	prefix_string name
+	prefix_string shout
+	short icon_id
+	short graphic_id
+	short tp_cost
+	short sp_cost
+	char cast_time
+	char = 0
+	char = 0
+	ESF_Spell_Type type
+	char element
+	short element_power
+	ESF_Spell_Target_Restrict target_restrict
+	ESF_Spell_Target_Type target_type
+	char = 0
+	char = 0
+	short = 0
+	short min_damage
+	short max_damage
+	short accuracy
+	short = 0
+	short = 0
+	char = 0
+	short hp
+	short = 0
+	char = 0
+	short = 0
+	short = 0
+	short = 0
+	short = 0
+	short = 0
+	short = 0
+}
+
+struct ESF_File
+{
+	raw_string(3) magic
+	byte hash[4]
+	short num_spells
+	char = 0
+	struct ESF_Spell spells[num_spells]
+}
+
+
+// ---
+
+enum EMF_Type : char
+{
+	0 Default
+	3 PK
+}
+
+enum EMF_Effect : char
+{
+	0 DNone
+	1 HPDrain
+	2 TPDrain
+	3 Quake
+}
+
+enum EMF_Tile_Spec : char
+{
+	 0 Wall
+	 1 ChairDown
+	 2 ChairLeft
+	 3 ChairRight
+	 4 ChairUp
+	 5 ChairDownRight
+	 6 ChairUpLeft
+	 7 ChairAll
+	 9 Chest
+	16 BankVault
+	17 NPCBoundary
+	18 MapEdge
+	19 FakeWall
+	20 Board1
+	21 Board2
+	22 Board3
+	23 Board4
+	24 Board5
+	25 Board6
+	26 Board7
+	27 Board8
+	28 Jukebox
+	29 Jump
+	30 Water
+	31 SpecUnknown7
+	32 Arena
+	33 AmbientSource
+	34 Spikes1
+	35 Spikes2
+	36 Spikes3
+}
+
+struct EMF_NPC
+{
+	char x
+	char y
+	short id
+	char spawn_type
+	short spawn_time
+	char amount
+}
+
+struct EMF_Unknown
+{
+	char = 0
+	char = 0
+	char = 0
+	char = 0
+	char = 0
+}
+
+struct EMF_Item
+{
+	char x
+	char y
+	short key_required
+	char chest_slot
+	short item_id
+	short spawn_time
+	three item_amount
+}
+
+struct EMF_Warp
+{
+	short warp_map
+	char warp_x
+	char warp_y
+	char level_required
+	short door
+}
+
+struct EMF_File
+{
+	raw_string(3) magic
+	byte hash[4]
+	raw_string(24) name
+	EMF_Type type
+	EMF_Effect effect
+	char music_id
+	char music_extra
+	short ambient_sound_id
+	char width
+	char height
+	short fill_tile
+	char map_available
+	char can_scroll
+	char relog_x
+	char relog_y
+	char = 0
+
+	char num_npcs
+	struct EMF_NPC npcs[num_npcs]
+
+	char num_unknowns
+	struct EMF_Unknown unknowns[num_unknowns]
+
+	char num_items
+	struct EMF_Item items[num_items]
+
+	// Rest is not included because more specialized code is required:
+	// EMFRows(EMF_Tile_Spec) specs
+	// EMFRows(struct EMF_Warp) warps
+	// EMFRows(EMF_GFX) gfx[9]
+}
