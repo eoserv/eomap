@@ -28,6 +28,7 @@ class Engine_Drawing_Thread
 
 		alsmart::unique_display m_display;
 		alsmart::unique_event_queue m_event_queue;
+		alsmart::unique_timer m_anim_timer;
 		ALLEGRO_TRANSFORM m_display_transform;
 		ALLEGRO_TRANSFORM m_display_transform_inverted;
 
@@ -38,6 +39,9 @@ class Engine_Drawing_Thread
 		std::mutex m_post_frame_jobs_mutex;
 
 		s_ptr<Draw_Buffer> m_draw_buf;
+		std::vector<alsmart::shared_bitmap> m_framebuffers;
+		std::deque<int> m_framebuffer_pool;
+		std::mutex m_framebuffer_pool_mutex;
 
 		std::mutex m_imgui_mutex;
 
@@ -72,10 +76,11 @@ class Engine_Drawing_Thread
 		Engine_Drawing_Thread(Engine& engine, sig<void(s_ptr<Draw_Buffer>)>& draw_signal);
 		~Engine_Drawing_Thread();
 
-		void emplace_pre_frame_job(Engine::Job&&);
-		void emplace_post_frame_job(Engine::Job&&);
+		void add_pre_frame_job(Engine::Job&&);
+		void add_post_frame_job(Engine::Job&&);
 
 		void die();
+		void join();
 		void draw(s_ptr<Draw_Buffer>);
 
 		std::unique_lock<std::mutex> lock_imgui();

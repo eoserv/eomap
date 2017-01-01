@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+// optional is C++17 only, but experimental/optional exists since GCC 4.9
 #include <experimental/optional>
 #include <functional>
 #include <memory>
@@ -23,7 +24,7 @@ template <class T>
 using refwrap = std::reference_wrapper<T>;
 
 template <class T>
-using optref = optional<refwrap<T>>;
+using optref = opt<refwrap<T>>;
 
 template <class... Args>
 using s_ptr = std::shared_ptr<Args...>;

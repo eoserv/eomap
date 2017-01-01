@@ -1,6 +1,6 @@
 #include "draw_renderer.hpp"
 
-#include "cio/cio.hpp"
+#include "util/cio/cio.hpp"
 #include "third-party/variant.h"
 
 #include <allegro5/allegro_primitives.h>
@@ -42,20 +42,28 @@ static const ALLEGRO_VERTEX_ELEMENT draw_vert_elems[] = {
 
 struct Draw_Render_Dump_Visitor
 {
-	struct clip_rect
-	{
-		int x, y, w, h;
-	};
-
-	std::stack<ALLEGRO_BITMAP*> old_target;
-	std::stack<clip_rect> old_clipper;
-
 	std::map<std::uintptr_t, int> bmp_id_table;
 	int bmp_id_next = 0;
 
-	std::string bmp2str(ALLEGRO_BITMAP* bmp)
+	void operator()(drawcmd::Push_Target& cmd)
 	{
-		return std::to_string(reinterpret_cast<std::uintptr_t>(bmp));
+		cio::out << "[Push_Target, image:" << cmd.bmp.get() << "]\n";
+	}
+
+	void operator()(drawcmd::Pop_Target& cmd)
+	{
+		cio::out << "[Pop_Target]\n";
+	}
+
+	void operator()(drawcmd::Push_Clipper& cmd)
+	{
+		cio::out << "[Push_Clipper, x:" << cmd.x << ", y:" << cmd.y <<
+		            ", w:" << cmd.w << ", h:" << cmd.h << "]\n";
+	}
+
+	void operator()(drawcmd::Pop_Clipper& cmd)
+	{
+		cio::out << "[Pop_Clipper]\n";
 	}
 
 	void operator()(drawcmd::Clear& cmd)
@@ -64,9 +72,30 @@ struct Draw_Render_Dump_Visitor
 		         << ',' << cmd.color.b << ',' << cmd.color.a << ")]\n";
 	}
 
+	void operator()(drawcmd::Clear_Depth& cmd)
+	{
+		cio::out << "[Clear_Depth, depth:" << cmd.depth << "]\n";
+	}
+
+	void operator()(drawcmd::Line& cmd)
+	{
+		cio::out << "[Line, x:" << cmd.x << ", y:" << cmd.y << ", x2:"
+		         << cmd.x2 << ", y2:" << cmd.y2 << ", color:("
+		         << cmd.color.r << ',' << cmd.color.g << ',' << cmd.color.b
+		         << ',' << cmd.color.a << "]\n";
+	}
+
+	void operator()(drawcmd::Filled_Rect& cmd)
+	{
+		cio::out << "[Filled_Rect, x:" << cmd.x << ", y:" << cmd.y << ", x2:"
+		         << cmd.x2 << ", y2:" << cmd.y2 << ", color:("
+		         << cmd.color.r << ',' << cmd.color.g << ',' << cmd.color.b
+		         << ',' << cmd.color.a << "]\n";
+	}
+
 	void operator()(drawcmd::Blit& cmd)
 	{
-		cio::out << "[Blit, image:" << bmp2str(cmd.bmp) << ", x:"
+		cio::out << "[Blit, image:" << cmd.bmp.get() << ", x:"
 		         << cmd.x << ", y:" << cmd.y << ", z:" << cmd.z << ", flags:"
 		         << cmd.flags << "]\n";
 	}
@@ -84,6 +113,14 @@ struct Draw_Render_Dump_Visitor
 
 struct Draw_Render_Visitor
 {
+	struct clip_rect
+	{
+		int x, y, w, h;
+	};
+
+	std::stack<ALLEGRO_BITMAP*> old_target;
+	std::stack<clip_rect> old_clipper;
+
 	Draw_Render_Data& data;
 	std::map<ALLEGRO_BITMAP*, std::vector<Draw_Vertex>> vertmap;
 
@@ -126,8 +163,6 @@ struct Draw_Render_Visitor
 			auto&& tex = p.first;
 			auto&& verts = p.second;
 
-			cio::out << "Rendering " << verts.size() << " vertices" << cio::endl;
-
 			al_draw_prim(verts.data(), draw_vert_decl, tex,
 			             0, verts.size(), ALLEGRO_PRIM_TRIANGLE_LIST);
 		}
@@ -152,22 +187,74 @@ struct Draw_Render_Visitor
 		flush_verts();
 	}
 
+	void operator()(drawcmd::Push_Target& cmd)
+	{
+		flush_verts();
+		old_target.push(al_get_target_bitmap());
+		al_set_target_bitmap(cmd.bmp.get());
+	}
+
+	void operator()(drawcmd::Pop_Target& cmd)
+	{
+		flush_verts();
+		if (old_target.empty() || old_target.top() == nullptr)
+			;
+		else
+			al_set_target_bitmap(old_target.top());
+		old_target.pop();
+	}
+
+	void operator()(drawcmd::Push_Clipper& cmd)
+	{
+		flush_verts();
+		clip_rect clip;
+		al_get_clipping_rectangle(&clip.x, &clip.y, &clip.w, &clip.h);
+		old_clipper.push(clip);
+		al_set_clipping_rectangle(cmd.x, cmd.y, cmd.w, cmd.h);
+	}
+
+	void operator()(drawcmd::Pop_Clipper& cmd)
+	{
+		flush_verts();
+		auto& clip = old_clipper.top();
+		al_set_clipping_rectangle(clip.x, clip.y, clip.w, clip.h);
+		old_clipper.pop();
+	}
+
 	void operator()(drawcmd::Clear& cmd)
 	{
+		flush_verts();
 		al_clear_to_color(cmd.color);
-		al_clear_depth_buffer(1.f);
+	}
+
+	void operator()(drawcmd::Clear_Depth& cmd)
+	{
+		flush_verts();
+		al_clear_depth_buffer(cmd.depth);
+	}
+
+	void operator()(drawcmd::Line& cmd)
+	{
+		flush_verts();
+		al_draw_line(cmd.x, cmd.y, cmd.x2, cmd.y2, cmd.color, 0.0);
+	}
+
+	void operator()(drawcmd::Filled_Rect& cmd)
+	{
+		flush_verts();
+		al_draw_filled_rectangle(cmd.x, cmd.y, cmd.x2, cmd.y2, cmd.color);
 	}
 
 	void operator()(drawcmd::Blit& cmd)
 	{
-		auto real = get_real_bitmap(cmd.bmp);
+		auto real = get_real_bitmap(cmd.bmp.get());
 
-		float cmd_x = float(cmd.x) + 0.5f;
-		float cmd_y = float(cmd.y) + 0.5f;
+		float cmd_x = float(cmd.x);
+		float cmd_y = float(cmd.y);
 		float cmd_z = cmd.z;
 
-		float real_x = float(real.x) + 0.5f;
-		float real_y = float(real.y) + 0.5f;
+		float real_x = float(real.x);
+		float real_y = float(real.y);
 		float w = float(real.w);
 		float h = float(real.h);
 
@@ -201,23 +288,16 @@ struct Draw_Render_Visitor
 
 	void operator()(drawcmd::Draw_ImGui& cmd)
 	{
-
-		//al_set_render_state(ALLEGRO_DEPTH_TEST, false);
-
-		//al_hold_bitmap_drawing(false);
+		flush_verts();
+		al_set_render_state(ALLEGRO_DEPTH_TEST, false);
 		if (data.draw_imgui)
 			data.draw_imgui();
-		//al_hold_bitmap_drawing(true);
-
-		//al_set_render_state(ALLEGRO_DEPTH_TEST, true);
-
+		al_set_render_state(ALLEGRO_DEPTH_TEST, true);
 	}
 
 	void operator()(drawcmd::Sync& cmd)
 	{
 		flush_verts();
-		//al_hold_bitmap_drawing(false);
-		//al_hold_bitmap_drawing(true);
 	}
 };
 
@@ -237,12 +317,9 @@ void draw_render(Draw_Render_Data& data, Draw_Buffer& draw_buf)
 
 	cio::out << '}' << cio::endl;
 */
-	Draw_Render_Visitor v(data);
 
-	//al_hold_bitmap_drawing(true);
+	Draw_Render_Visitor v(data);
 
 	for (auto& cmd : draw_buf.m_cmd_buffer)
 		jss::visit(v, cmd);
-
-	//al_hold_bitmap_drawing(false);
 }

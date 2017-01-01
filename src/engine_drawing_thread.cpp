@@ -2,7 +2,7 @@
 
 #include "draw_renderer.hpp"
 
-#include "cio/cio.hpp"
+#include "util/cio/cio.hpp"
 
 #include "third-party/imgui/imgui.h"
 #include "third-party/imgui/imgui_impl_a5.h"
@@ -26,11 +26,20 @@ void Engine_Drawing_Thread::thread_main()
 {
 	al_set_new_display_flags(ALLEGRO_RESIZABLE | ALLEGRO_GENERATE_EXPOSE_EVENTS);
 	al_set_new_display_option(ALLEGRO_AUTO_CONVERT_BITMAPS, 0, ALLEGRO_REQUIRE);
+	// Depth buffer disabled for the display backbuffer
+	// Drawing requiring depth buffers is restricted to FBOs now
 	//al_set_new_display_option(ALLEGRO_DEPTH_SIZE, 16, ALLEGRO_SUGGEST);
 	// Main loop is event-triggered, causing input lag with vsync on
 	al_set_new_display_option(ALLEGRO_SINGLE_BUFFER, 1, ALLEGRO_SUGGEST);
 	al_set_new_display_option(ALLEGRO_VSYNC, 0, ALLEGRO_SUGGEST);
 	m_display = alsmart::create_display_unique(640, 480);
+
+	al_set_render_state(ALLEGRO_DEPTH_TEST, true);
+	al_set_render_state(ALLEGRO_ALPHA_TEST, true);
+	al_set_render_state(ALLEGRO_ALPHA_FUNCTION, ALLEGRO_RENDER_NOT_EQUAL);
+
+	// Animation timer runs 4 times a second
+	m_anim_timer = alsmart::create_timer_unique(1.0);
 
 	int refresh_rate = al_get_display_refresh_rate(m_display.get());
 
@@ -47,9 +56,9 @@ void Engine_Drawing_Thread::thread_main()
 	al_register_event_source(m_event_queue.get(), al_get_display_event_source(m_display.get()));
 	al_register_event_source(m_event_queue.get(), al_get_keyboard_event_source());
 	al_register_event_source(m_event_queue.get(), al_get_mouse_event_source());
+	al_register_event_source(m_event_queue.get(), al_get_timer_event_source(m_anim_timer.get()));
 
-	al_set_target_backbuffer(m_display.get());
-	//al_set_render_state(ALLEGRO_DEPTH_TEST, true);
+	al_start_timer(m_anim_timer.get());
 
 	ImGui_ImplA5_Init(m_display.get());
 	Imgui_ImplA5_CreateDeviceObjects();
@@ -204,8 +213,6 @@ void Engine_Drawing_Thread::thread_draw(s_ptr<Draw_Buffer> draw_buf)
 
 		draw_time = (draw_end - draw_start) + work_time;
 
-		cio::out << "Frame took " << (draw_time * 1000.0) << " ms to draw" << cio::endl;
-
 		m_draw_times[m_draw_times_idx++] = draw_time;
 		m_frames_drawn++;
 
@@ -257,20 +264,20 @@ Engine_Drawing_Thread::Engine_Drawing_Thread(Engine& engine, sig<void(s_ptr<Draw
 Engine_Drawing_Thread::~Engine_Drawing_Thread()
 {
 	die();
-	m_thread.join();
+	join();
 	al_unregister_event_source(m_event_queue.get(), &m_event_source);
 	al_destroy_user_event_source(&m_event_source);
 
 	ImGui_ImplA5_Shutdown();
 }
 
-void Engine_Drawing_Thread::emplace_pre_frame_job(Engine::Job&& job)
+void Engine_Drawing_Thread::add_pre_frame_job(Engine::Job&& job)
 {
 	std::unique_lock<std::mutex> l(m_pre_frame_jobs_mutex);
 	m_pre_frame_jobs.push_back(job);
 }
 
-void Engine_Drawing_Thread::emplace_post_frame_job(Engine::Job&& job)
+void Engine_Drawing_Thread::add_post_frame_job(Engine::Job&& job)
 {
 	std::unique_lock<std::mutex> l(m_post_frame_jobs_mutex);
 	m_post_frame_jobs.push_back(job);
@@ -279,6 +286,12 @@ void Engine_Drawing_Thread::emplace_post_frame_job(Engine::Job&& job)
 void Engine_Drawing_Thread::die()
 {
 	signal(signal_die, nullptr);
+}
+
+void Engine_Drawing_Thread::join()
+{
+	if (m_thread.joinable())
+		m_thread.join();
 }
 
 void Engine_Drawing_Thread::draw(s_ptr<Draw_Buffer> draw_buf)

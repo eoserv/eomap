@@ -63,10 +63,7 @@ void ImGui_ImplA5_RenderDrawLists(ImDrawData* draw_data)
 
         // FIXME-OPT: Unfortunately Allegro doesn't support 16-bit indices
         // You can also use '#define ImDrawIdx unsigned int' in imconfig.h and request ImGui to output 32-bit indices
-        static ImVector<int> indices;
-        indices.resize(cmd_list->IdxBuffer.Size);
-        for (int i = 0; i < cmd_list->IdxBuffer.Size; ++i)
-            indices[i] = (int)cmd_list->IdxBuffer.Data[i];
+        auto&& indices = reinterpret_cast<const int*>(cmd_list->IdxBuffer.Data);
 
         int idx_offset = 0;
         for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
@@ -236,7 +233,6 @@ bool ImGui_ImplA5_ProcessEvent(ALLEGRO_EVENT *ev)
     }
     return false;
 }
-
 
 void ImGui_ImplA5_NewFrame()
 {

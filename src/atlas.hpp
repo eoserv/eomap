@@ -68,6 +68,8 @@ class Atlas
 			return m_pages[id].bmp;
 		}
 
+		std::vector<int> get_entry_list();
+
 		void upload(Engine& engine);
 };
 

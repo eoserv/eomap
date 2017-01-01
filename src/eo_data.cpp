@@ -98,7 +98,7 @@ void Full_EMF::unserialize(EO_Stream_Reader& reader)
 			string message = data.substr(title_length);
 
 			if (x < header.width && y < header.height)
-				meta(x, y).sign = {title, message};
+				meta(x, y).sign = pair<string, string>{title, message};
 		}
 	}
 }

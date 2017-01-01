@@ -12,7 +12,7 @@ SOURCES += \
     src/pub_structs.cpp \
     src/eo_stream.cpp \
     src/eo_data.cpp \
-    src/cio/cio.cpp \
+    src/util/cio/cio.cpp \
     src/draw_buffer.cpp \
     src/draw_renderer.cpp \
     src/gfx_manager.cpp \
@@ -29,7 +29,8 @@ SOURCES += \
     src/gui.cpp \
     src/map_renderer.cpp \
     src/dialog/newmapdialog.cpp \
-    src/dialog/aboutdialog.cpp
+    src/dialog/aboutdialog.cpp \
+    src/palette_renderer.cpp
 
 PKGCONFIG += allegro-5 \
 	allegro_image-5 \
@@ -43,16 +44,16 @@ HEADERS += \
     src/pub_structs.hpp \
     src/pub_enums.hpp \
     src/eo_data.hpp \
-    src/cio/cio.hpp \
+    src/util/cio/cio.hpp \
     src/draw_buffer.hpp \
     src/draw_renderer.hpp \
     src/gfx_manager.hpp \
     src/third-party/variant.h \
-    src/alsmart/alsmart.hpp \
+    src/util/alsmart/alsmart.hpp \
     src/common_alsmart.hpp \
     src/pe_reader.hpp \
     src/dib_reader.hpp \
-    src/int_pack.hpp \
+    src/util/int_pack.hpp \
     src/engine.hpp \
     src/engine_drawing_thread.hpp \
     src/common_signal.hpp \
@@ -63,9 +64,11 @@ HEADERS += \
     src/third-party/imgui/stb_textedit.h \
     src/third-party/imgui/stb_truetype.h \
     src/third-party/imgui/imgui_impl_a5.h \
-    src/alsmart/native_dialog.hpp \
+    src/util/alsmart/native_dialog.hpp \
     src/atlas.hpp \
     src/gui.hpp \
     src/map_renderer.hpp \
     src/dialog/newmapdialog.hpp \
-    src/dialog/aboutdialog.hpp
+    src/dialog/aboutdialog.hpp \
+    src/palette_renderer.hpp \
+    src/util/signal.hpp

@@ -2356,7 +2356,8 @@ void ImGui::NewFrame()
 
     // Create implicit window - we will only render it if the user has added something to it.
     ImGui::SetNextWindowSize(ImVec2(400,400), ImGuiSetCond_FirstUseEver);
-    ImGui::Begin("Debug");
+	// ***EDIT***: Disabled input handling for the Debug window, to avoid blocking mouse input to the game
+    ImGui::Begin("Debug", NULL, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings);
 }
 
 // NB: behavior of ImGui after Shutdown() is not tested/guaranteed at the moment. This function is merely here to free heap allocations.

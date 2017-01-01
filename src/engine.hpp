@@ -17,6 +17,31 @@ class Engine_Drawing_Thread;
 
 class GUI;
 class Map_Renderer;
+class Palette_Renderer;
+
+class Framebuffer
+{
+	private:
+		Engine& m_engine;
+		s_bmp m_bmp;
+
+		void destroy();
+
+	public:
+		explicit Framebuffer(Engine&);
+		Framebuffer(Engine&, s_bmp);
+		~Framebuffer();
+
+		Framebuffer(Framebuffer&&);
+
+		const Framebuffer& operator=(Framebuffer&&);
+
+		Framebuffer& operator=(s_bmp&&);
+
+		void resize(int w, int h);
+
+		const s_bmp& bmp() const;
+};
 
 class Engine
 {
@@ -27,6 +52,8 @@ class Engine
 			double cost_sec;
 			func<void()> fn;
 		};
+
+		u_ptr<Engine_Drawing_Thread> m_drawing_thread;
 
 	private:
 		struct impl_t;
@@ -42,11 +69,16 @@ class Engine
 		opt<AboutDialog> m_about_dialog;
 		opt<NewMapDialog> m_new_map_dialog;
 
-		Full_EMF m_emf;
+		opt<Full_EMF> m_emf;
 
 		bool m_gui_dirty = false;
 		bool m_dirty = false;
+		int m_anim_frame = 0;
+
 		s_ptr<Map_Renderer> m_mapview;
+		Framebuffer m_mapview_fb;
+		s_ptr<Palette_Renderer> m_palview;
+		Framebuffer m_palview_fb;
 		s_ptr<GUI> m_gui;
 
 		void allegro_event(ALLEGRO_EVENT e);
@@ -63,24 +95,30 @@ class Engine
 		void gui_save();
 		void gui_save_as();
 
+		void draw_scene();
+		void draw_mapview(Draw_Buffer&);
+		void draw_palview(Draw_Buffer&);
+
 	public:
-		u_ptr<Engine_Drawing_Thread> m_drawing_thread;
 		sig<void(s_ptr<Draw_Buffer>)> sig_draw;
 
 		Engine();
 		~Engine();
 
-		Full_EMF& emf() { return m_emf; }
+		bool has_emf() { return m_emf != nullopt; }
+		Full_EMF& emf() { return m_emf.value(); }
 
 		GFX_Manager& gfx() { return m_gfx; }
 
-		void add_post_frame_job(Job);
-		void emplace_post_frame_job(Job&&);
+		void add_post_frame_job(Job&&);
 
 		void run();
 		void do_gui();
 
 		void queue_upload(const s_bmp& bmp);
+
+		Framebuffer create_framebuffer(int w, int h);
+		void destroy_framebuffer(s_bmp bmp);
 
 		void post(func<void()>);
 		void die();

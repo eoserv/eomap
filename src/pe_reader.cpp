@@ -1,8 +1,8 @@
-
 #include "pe_reader.hpp"
 
 #include "dib_reader.hpp"
-#include "int_pack.hpp"
+
+#include "util/int_pack.hpp"
 
 #include <cstring>
 #include <vector>

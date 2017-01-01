@@ -2,7 +2,7 @@
 
 #include "engine.hpp"
 
-#include "cio/cio.hpp"
+#include "util/cio/cio.hpp"
 
 #include <numeric>
 
@@ -101,6 +101,16 @@ s_bmp Atlas::get(int id)
 		return nullptr;
 
 	return it->second.second;
+}
+
+std::vector<int> Atlas::get_entry_list()
+{
+	std::vector<int> result;
+
+	for (auto&& entry : m_entries)
+		result.push_back(entry.first);
+
+	return result;
 }
 
 void Atlas::upload(Engine& engine)

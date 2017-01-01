@@ -9,7 +9,7 @@ class NewMapDialog
 		Engine& m_engine;
 
 	public:
-		char m_name[24] = {};
+		char m_name[25] = {};
 		int m_width = 0;
 		int m_height = 0;
 

@@ -370,7 +370,7 @@ inline stream& operator <<(stream& io, double f)
 
 inline stream& operator <<(stream& io, long double f)
 {
-	std::fprintf(io.handle(), "%Lg", f);
+	std::fprintf(io.handle(), "%Lf", f);
 	return io;	
 }
 

@@ -1,7 +1,7 @@
 #ifndef EOMAP_PE_READER_HPP
 #define EOMAP_PE_READER_HPP
 
-#include "cio/cio.hpp"
+#include "util/cio/cio.hpp"
 #include "common.hpp"
 
 #include <algorithm>

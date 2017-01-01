@@ -1,9 +1,10 @@
 #ifndef EOMAP_DIB_READER_HPP
 #define EOMAP_DIB_READER_HPP
 
-#include "cio/cio.hpp"
 #include "common.hpp"
-#include "int_pack.hpp"
+
+#include "util/cio/cio.hpp"
+#include "util/int_pack.hpp"
 
 #include <cstdint>
 #include <utility>

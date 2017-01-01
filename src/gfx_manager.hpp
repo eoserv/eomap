@@ -13,6 +13,7 @@
 #include <map>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 class Engine;
 
@@ -24,7 +25,7 @@ class GFX_Manager
 	private:
 		Engine& m_engine;
 
-		std::map<int, Atlas> gfx_atlasses;
+		std::map<int, Atlas> m_gfx_atlasses;
 
 	public:
 		GFX_Manager(Engine& engine);
@@ -32,12 +33,17 @@ class GFX_Manager
 
 		bool load_file(int fileid, const char* filename);
 
-		Atlas& get_atlas(int fileid)
+		optref<Atlas> get_atlas(int fileid)
 		{
-			return gfx_atlasses.find(fileid)->second;
+			auto it = m_gfx_atlasses.find(fileid);
+
+			if (it != m_gfx_atlasses.end())
+				return std::ref(it->second);
+			else
+				return nullopt;
 		}
 
-		ALLEGRO_BITMAP* get_image(int fileid, int imageid);
+		s_bmp get_image(int fileid, int imageid);
 };
 
 #endif // EOMAP_GFX_MANAGER_HPP

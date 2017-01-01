@@ -6,8 +6,8 @@ Homepage: http://eoserv.net
 
 ## Dependencies
 
-* C++14-capable C++ compiler (recent version of gcc or clang)
-* QtCreator / QMake (https://www.qt.io/ide/) **TEMPORARY: To be replaced with CMake**
+* C++14-capable C++ compiler with experimental/optional support (recent version of gcc or clang)
+* CMake or QtCreator / QMake (https://www.qt.io/ide/)
 * Allegro 5 (https://wiki.allegro.cc/)
 * Asio 1.10 (http://think-async.com/) **TEMPORARY: Not a networked program so no need for this dependency**
 

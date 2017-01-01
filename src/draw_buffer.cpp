@@ -1,7 +1,5 @@
 #include "draw_buffer.hpp"
 
-#include "cio/cio.hpp"
-
 Draw_Buffer::Draw_Buffer()
 {
 	m_cmd_buffer.reserve(1024);
